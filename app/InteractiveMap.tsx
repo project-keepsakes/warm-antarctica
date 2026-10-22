@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import maplibregl, { type Map } from "maplibre-gl";
+import * as maplibregl from "maplibre-gl";
+import type { Map } from "maplibre-gl";
 import { feature } from "topojson-client";
 import land from "world-atlas/land-50m.json";
 import "maplibre-gl/dist/maplibre-gl.css";
