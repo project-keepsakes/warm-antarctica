@@ -1,12 +1,10 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
+import { fetchWorker } from "./worker-runtime.mjs";
 
 async function render() {
-  const workerUrl = new URL("../dist/server/index.js", import.meta.url);
-  workerUrl.searchParams.set("test", `${process.pid}-${Date.now()}`);
-  const { default: worker } = await import(workerUrl.href);
-  return worker.fetch(new Request("http://localhost/", { headers: { accept: "text/html" } }), { ASSETS: { fetch: async () => new Response("Not found", { status: 404 }) } }, { waitUntil() {}, passThroughOnException() {} });
+  return fetchWorker();
 }
 
 test("server-renders Warm Antarctica and its first journey step", async () => {
@@ -116,4 +114,17 @@ test("Story mode captures wheel input before MapLibre can zoom", async () => {
   assert.match(map, /instance\.getContainer\(\)\.removeEventListener\("wheel", handleStoryScroll, storyWheelOptions\)/);
   assert.match(map, /onStoryStepRef\.current\(event\.deltaY > 0 \? 1 : -1\)/);
   assert.match(map, /if \(storyMode\) map\.current\.scrollZoom\.disable\(\);\s*else map\.current\.scrollZoom\.enable\(\);/);
+});
+
+test("serves the compiled assets required for hydration", async () => {
+  const html = await (await fetchWorker()).text();
+  const assets = [...new Set([...html.matchAll(/(?:src|href)="([^"]+)"/g)].map(match => match[1]))]
+    .filter(asset => asset.startsWith("/_next/static/") && /\.(?:js|css)(?:\?|$)/.test(asset));
+  assert.ok(assets.length >= 2, "Expected compiled client assets");
+  for (const asset of assets.slice(0, 6)) {
+    const response = await fetchWorker(asset);
+    assert.equal(response.status, 200, asset);
+    assert.doesNotMatch(response.headers.get("content-type") ?? "", /^text\/html/);
+    await response.arrayBuffer();
+  }
 });
