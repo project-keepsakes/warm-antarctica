@@ -18,13 +18,15 @@ npm install
 npm run dev
 ```
 
-Open the local address printed by the command. It is normally
-`http://localhost:3000`; it may use another port if that one is busy.
+Open the local address printed by the command. After `npm run build`, use
+`npm start` to preview the built Worker at `http://127.0.0.1:3000` through the
+Cloudflare Vite plugin. This local preview does not deploy the site.
 
 ## Test
 
 ```bash
 npm run lint
+npm run typecheck
 npm test
 git diff --check
 ```
@@ -32,6 +34,9 @@ git diff --check
 `npm test` builds the app and checks the first journey stage, the guided
 sequence and shared timing, reduced-motion safeguards, and the Story mode
 wheel contract that prevents map zoom from taking over story scrolling.
+The rendered-page and compiled-asset checks use a local Workers runtime. An
+isolated fixture also builds and renders a real PNG through the patched image
+stack; that test route is never added to the app.
 
 ## Data, sources, and limits
 
