@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import * as maplibregl from "maplibre-gl";
 import type { Map } from "maplibre-gl";
 import { feature } from "topojson-client";
+import type { GeometryCollection, Topology } from "topojson-specification";
 import land from "world-atlas/land-50m.json";
 import "maplibre-gl/dist/maplibre-gl.css";
 import type { ShelfRegion } from "./journey";
@@ -222,7 +223,8 @@ export function InteractiveMap({ active, region, layers, storyMode, currentsMode
     instance.addControl(new maplibregl.NavigationControl({ showCompass: true }), "top-right");
     instance.on("load", () => {
       instance.setProjection({ type: "globe" });
-      const landFeature = feature(land as never, (land as { objects: { land: never } }).objects.land);
+      const landTopology = land as unknown as Topology<{ land: GeometryCollection }>;
+      const landFeature = feature(landTopology, landTopology.objects.land);
       instance.addSource("land", { type: "geojson", data: landFeature });
       instance.addLayer({ id: "land-fill", type: "fill", source: "land", paint: { "fill-color": "#8fc8d5", "fill-opacity": 0.72 } });
       instance.addLayer({ id: "land-line", type: "line", source: "land", paint: { "line-color": "#d5fbff", "line-opacity": 0.38, "line-width": 0.7 } });
